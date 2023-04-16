@@ -1,6 +1,7 @@
 from flask_restful import Resource
 import requests
 from models.Position import Position
+from models.PositionHistory import PositionHistory
 class SensorView(Resource):
     def get(self):
         unique_data = []
@@ -12,7 +13,6 @@ class SensorView(Resource):
         data_list.extend(khulna)
         data_list.extend(dhaka)
         hex_set = set()
-
         for item in data_list:
             hex_value = item['hex']
             if hex_value not in hex_set:
@@ -32,6 +32,13 @@ class SensorView(Resource):
                     });
 
                 position.save();
+
+                if(item['lat'] is not None and item['lon'] is not None):
+                    history = PositionHistory(**{
+                        "unique_code": hex_value,
+                        "location": "POINT({} {})".format(item['lat'],item['lon'])
+                    })
+                    history.save()
                 hex_set.add(hex_value)
                 unique_data.append(item)
         return {
