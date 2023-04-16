@@ -21,12 +21,14 @@ class SensorView(Resource):
                     position.lat = item['lat']
                     position.lon = item['lon']
                     position.alt = item['alt']
+                    position.speed = item['spd']
                 else:
                     position = Position(**{
                         "unique_code": hex_value,
                         "lat": item['lat'],
                         "lon": item['lon'],
-                        "alt": item['alt']
+                        "alt": item['alt'],
+                        "speed": item['spd']
                     });
 
                 position.save();
