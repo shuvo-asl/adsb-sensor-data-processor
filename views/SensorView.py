@@ -1,3 +1,4 @@
+import datetime
 from flask_restful import Resource
 import requests
 from models.Position import Position
@@ -22,6 +23,7 @@ class SensorView(Resource):
                     position.lon = item['lon']
                     position.alt = item['alt']
                     position.speed = item['spd']
+                    position.updated_at = datetime.datetime.utcnow()
                 else:
                     position = Position(**{
                         "unique_code": hex_value,
@@ -36,6 +38,8 @@ class SensorView(Resource):
                 if(item['lat'] is not None and item['lon'] is not None):
                     history = PositionHistory(**{
                         "unique_code": hex_value,
+                        "lat":item['lat'],
+                        "lon":item['lon'],
                         "location": "POINT({} {})".format(item['lat'],item['lon'])
                     })
                     history.save()

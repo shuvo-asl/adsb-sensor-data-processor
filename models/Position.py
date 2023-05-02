@@ -1,5 +1,7 @@
 from db import db
+import datetime
 from sqlalchemy import desc
+from sqlalchemy import Column, DateTime
 class Position(db.Model):
     __tablename__ = 'positions'
     id = db.Column(db.Integer,primary_key=True)
@@ -8,13 +10,16 @@ class Position(db.Model):
     lon = db.Column(db.Float(precision=2))
     alt = db.Column(db.Float(precision=2))
     speed = db.Column(db.Float(precision=2))
+    created_at = Column(DateTime,default=datetime.datetime.utcnow())
+    updated_at = Column(DateTime,nullable=True)
 
-    def __int__(self,unique_code,lat,lon,alt,speed):
+    def __int__(self,unique_code,lat,lon,alt,speed,updated_at = None):
         self.unique_code = unique_code
         self.lat = lat
         self.lon = lon
         self.alt = alt
         self.speed = speed
+        self.updated_at = updated_at
 
     def json(self):
         return {
