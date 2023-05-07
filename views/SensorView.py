@@ -6,6 +6,10 @@ from models.PositionHistory import PositionHistory
 class SensorView(Resource):
     def get(self):
         unique_data = []
+        return {
+            "status": "success",
+            "data": unique_data
+        }
         khulna = requests.get("http://192.168.201.3/aircraftlist.json").json();
         dhaka = requests.get("http://192.168.30.27/aircraftlist.json").json();
 
