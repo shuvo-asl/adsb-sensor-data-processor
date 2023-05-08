@@ -38,6 +38,18 @@ class FlightPosition(db.Model):
             "angle":self.angle,
             "response_text":self.response_text,
         }
+
     @classmethod
-    def getAllPositions(cls):
-        return db.session.query(cls).order_by(desc(cls.id)).all()
+    def getAllPositionHistory(cls):
+        return db.session.query(cls).all()
+
+    @classmethod
+    def getAllPositionHistoryByFlightNo(cls, flight_no):
+        flight = Flight.getFlightByFlightNo(flight_no);
+        if flight is None:
+            return None
+        flight = flight.json()
+        return db.session.query(cls).filter(cls.flight_id == flight['id']).all()
+    def save(self):
+        db.session.add(self)
+        db.session.commit()

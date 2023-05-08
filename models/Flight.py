@@ -15,10 +15,17 @@ class Flight(db.Model):
     created_at = Column(DateTime, default=datetime.datetime.utcnow())
     updated_at = Column(DateTime, nullable=True)
 
+    def __init__(self, aircraft_id, flight_no, src=None, destination=None, flight_callsign=None):
+        self.aircraft_id = aircraft_id
+        self.flight_no = flight_no
+        self.src = src
+        self.destination = destination
+        self.flight_callsign = flight_callsign
+
     def json(self):
         return {
             "id":self.id,
-            "aircraft":str(self.aircraft),
+            "aircraft":(self.aircraft).json(),
             "flight_no":self.flight_no,
             "src":self.src,
             "destination":self.destination,
@@ -30,3 +37,10 @@ class Flight(db.Model):
     def getAllFlights(cls):
         return db.session.query(cls).all()
 
+    @classmethod
+    def getFlightByFlightNo(cls, flight_no):
+        return cls.query.filter_by(flight_no=flight_no).first()
+
+    def save(self):
+        db.session.add(self)
+        db.session.commit()

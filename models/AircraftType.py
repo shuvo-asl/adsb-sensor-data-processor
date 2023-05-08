@@ -10,13 +10,19 @@ class AircraftType(db.Model):
     id = db.Column(db.Integer,primary_key=True)
     name = db.Column(db.String(200))
     mtow = db.Column(db.Float(precision=2),nullable=True)
-    wing_type = db.Column(db.Enum('Fix Wing', 'Helicopter', 'Fixed Wing'), nullable=False)
-    mtow_unit = db.Column(db.Enum('lbs', 'kgs'), nullable=False)
+    wing_type = db.Column(db.Enum('Fix Wing', 'Helicopter', 'Fixed Wing'), nullable=True)
+    mtow_unit = db.Column(db.Enum('lbs', 'kgs'), nullable=True)
     is_deleted = db.Column(db.Boolean, nullable=False, default=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow())
     updated_at = Column(DateTime, nullable=True)
     created_by = db.Column(db.Integer,nullable=True)
     updated_by = db.Column(db.Integer,nullable=True)
+
+    def __init__(self,name,mtow=None,wing_type=None,mtow_unit=None):
+        self.name = name
+        self.mtow = mtow
+        self.wing_type = wing_type
+        self.mtow_unit = mtow_unit
 
     def json(self):
         return {
@@ -31,4 +37,10 @@ class AircraftType(db.Model):
     @classmethod
     def getAllAircraftType(cls):
         return db.session.query(cls).filter(cls.is_deleted == 0).all()
+    @classmethod
+    def findAircraftTypeByName(cls, name):
+        return db.session.query(cls).filter(cls.name == name).first()
+    def save(self):
+        db.session.add(self);
+        db.session.commit();
 

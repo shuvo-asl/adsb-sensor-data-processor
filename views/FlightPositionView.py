@@ -1,15 +1,15 @@
 from flask_restful import Resource
 import requests
-from models.PositionHistory import PositionHistory
-class PositionHistoryView(Resource):
-    def get(self,unique_code):
-        if unique_code is None:
+from models.FlightPosition import FlightPosition
+class FlightPositionView(Resource):
+    def get(self,flight_no):
+        if flight_no is None:
             return {
                 "status" : "Failed",
                 "msg":"Unknown Request"
             },404
 
-        histories = PositionHistory.getAllPositionHistoryByUniqueCode(unique_code)
+        histories = FlightPosition.getAllPositionHistoryByFlightNo(flight_no)
 
         data = [item.json() for item in histories]
 
