@@ -30,7 +30,7 @@ class FlightPosition(db.Model):
     def json(self):
         return {
             "id":self.id,
-            "flight":(self.flight).json(),
+            "flight_no":self.flight_id,
             "lat":self.lat,
             'lon':self.lon,
             "altitude":self.altitude,

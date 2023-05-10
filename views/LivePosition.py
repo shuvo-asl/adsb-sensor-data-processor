@@ -1,11 +1,9 @@
 from flask_restful import Resource
-import datetime
 import requests
 from helpers.AircraftHelper import findOrCreateAircraft
 from helpers.FlightHelper import generateFlightNo,flightDataValidator
 from models.Flight import Flight
 from models.FlightPosition import FlightPosition
-from models.Airport import Airport
 class LivePosition(Resource):
     def get(self):
         khulna = requests.get("http://192.168.201.3/aircraftlist.json").json();
@@ -28,7 +26,7 @@ class LivePosition(Resource):
                     flight = Flight.getFlightByFlightNo(flight_no)
                     if flight is None:
                         flight = Flight(**{"aircraft_id": aircraft_details['id'], "flight_no": flight_no,
-                                           "src": flightInfoFromSensor['src']
+                                           "src": flightInfoFromSensor['org']
                             , "destination": flightInfoFromSensor['dst'],
                                            "flight_callsign": flightInfoFromSensor['fli']})
                         flight.save()
@@ -46,9 +44,6 @@ class LivePosition(Resource):
                     flightPositionInstance.save()
 
                     item['flight_no'] =flight_no
-                    item['org_airport'] = Airport.getAirportByIcao(item['org'])
-                    item['dst_airport'] = Airport.getAirportByIcao(item['dst'])
-
                     hex_set.add(hex_value)
                     unique_data.append(item)
         return {
