@@ -52,4 +52,11 @@ class Airport(db.Model):
     @classmethod
     def getAllAirports(cls):
         return db.session.query(cls).filter(cls.is_deleted == 0).all()
+    @classmethod
+    def getAirportByIcao(cls,icao):
+        airport =  db.session.query(cls).filter(cls.icao==icao).first()
+        if airport is not None:
+            airport = airport.json()
+        return airport
+
 

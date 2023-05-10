@@ -5,45 +5,9 @@ from helpers.AircraftHelper import findOrCreateAircraft
 from helpers.FlightHelper import generateFlightNo,flightDataValidator
 from models.Flight import Flight
 from models.FlightPosition import FlightPosition
+from models.Airport import Airport
 class LivePosition(Resource):
     def get(self):
-        flightInfoFromSensor = {
-            "uti": 1683539608,
-            "ns": 44729828,
-            "hex": "800C3B",
-            "fli": "LLR742",
-            "src": "A",
-            "ava": "A",
-            "lat": 22.96037,
-            "lon": 89.52279,
-            "alt": 16000,
-            "gda": "A",
-            "spd": 215,
-            "trk": 253,
-            "vrt": 64,
-            "tmp": None,
-            "wsp": None,
-            "wdi": None,
-            "cat": "A0",
-            "org": None,
-            "dst": None,
-            "opr": "LLR",
-            "typ": "AT76",
-            "reg": "VT-RKF",
-            "dis": 15.5,
-            "dbm": -75,
-            "cou": "Indi",
-            "squ": "2605",
-            "tru": 1273,
-            "lla": 0,
-            "alr": 0,
-            "spi": False,
-            "pic": 11,
-            "altg": 16800
-        };
-
-
-
         khulna = requests.get("http://192.168.201.3/aircraftlist.json").json();
         dhaka = requests.get("http://192.168.30.27/aircraftlist.json").json();
         #
@@ -82,6 +46,8 @@ class LivePosition(Resource):
                     flightPositionInstance.save()
 
                     item['flight_no'] =flight_no
+                    item['org_airport'] = Airport.getAirportByIcao(item['org'])
+                    item['dst_airport'] = Airport.getAirportByIcao(item['dst'])
 
                     hex_set.add(hex_value)
                     unique_data.append(item)
