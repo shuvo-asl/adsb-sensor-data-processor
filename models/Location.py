@@ -2,6 +2,8 @@ from db import db
 import datetime
 from sqlalchemy import desc
 from sqlalchemy import Column, DateTime
+from sqlalchemy.orm import relationship,backref
+
 class Location(db.Model):
     __tablename__ = 'location'
     id = db.Column(db.Integer,primary_key=True)

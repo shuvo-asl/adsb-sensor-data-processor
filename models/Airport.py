@@ -26,9 +26,8 @@ class Airport(db.Model):
     updated_at = db.Column(DateTime, nullable=True)
     created_by = db.Column(db.Integer, nullable=True)
     updated_by = db.Column(db.Integer, nullable=True)
-    
-    location = db.relationship('Location', backref='airports')
 
+    location = db.relationship('Location', backref='airports_location')
 
     def json(self):
         return {
@@ -58,5 +57,38 @@ class Airport(db.Model):
         if airport is not None:
             airport = airport.json()
         return airport
+    def getAllAirportsByIsoCode(iso_code):
+        subquery = db.session.query(Location.id).filter(Location.iso_code == iso_code).subquery()
+        query = db.session.query(
+            Airport.id,
+            Airport.name,
+            Airport.iata,
+            Airport.icao,
+            Airport.latitude,
+            Airport.longitude,
+            Airport.altitude,
+            Airport.timezone,
+            Airport.color,
+            Location.name.label('city')
+        ).join(Location, Location.id == Airport.city_id).filter(Location.parent_id == subquery)
+
+        airports = []
+        for row in query:
+            airport_dict = {
+                'id': row.id,
+                'name': row.name,
+                'iata': row.iata,
+                'icao': row.icao,
+                'latitude': row.latitude,
+                'longitude': row.longitude,
+                'altitude': row.altitude,
+                'timezone': row.timezone,
+                'color': row.color,
+                'city': row.city
+            }
+            airports.append(airport_dict)
+        return airports
+
+
 
 
