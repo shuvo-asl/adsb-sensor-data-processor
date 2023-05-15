@@ -1,5 +1,6 @@
+from datetime import datetime as dt
 def generateFlightNo(flight):
-    return flight['hex']
+    return flight['reg']+"_"+flight['fli']+"_"+str(dt.now().strftime("%d%m%Y"))
 
 def flightDataValidator(flight):
     lat = flight['lat'] is not None
