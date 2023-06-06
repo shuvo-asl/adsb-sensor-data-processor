@@ -19,9 +19,7 @@ class LivePosition(Resource):
         for item in data_list:
 
             # STORE SENSOR DATA INTO HISTORY
-            sensor = SensorData(**{
-                "data": item
-            })
+            sensor = SensorData(signal_type=item.get('alr', None), **{"data": item})
             sensor.save()
 
             hex_value = item['hex']

@@ -5,6 +5,7 @@ class SensorData(db.Model):
     __tablename__ = 'sensors'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     data = db.Column(JSON,nullable=True)
+    signal_type = db.Column(db.String(200))
 
     def __int__(self,data):
         self.data  = data
