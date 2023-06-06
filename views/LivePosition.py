@@ -4,22 +4,29 @@ from helpers.AircraftHelper import findOrCreateAircraft
 from helpers.FlightHelper import generateFlightNo,flightDataValidator
 from models.Flight import Flight
 from models.FlightPosition import FlightPosition
+from models.SensorData import SensorData
 class LivePosition(Resource):
     def get(self):
-        khulna = requests.get("http://192.168.201.3/aircraftlist.json").json();
+        khulna = requests.get("http://118.179.152.100/aircraftlist.json").json();
         dhaka = requests.get("http://192.168.30.27/aircraftlist.json").json();
         #
         # Combine the JSON objects into a single list
         data_list = []
-        data_list.extend(khulna)
+        # data_list.extend(khulna)
         data_list.extend(dhaka)
         hex_set = set()
         unique_data = []
         for item in data_list:
+
+            # STORE SENSOR DATA INTO HISTORY
+            sensor = SensorData(**{
+                "data": item
+            })
+            sensor.save()
+
             hex_value = item['hex']
             if hex_value not in hex_set:
                 flightInfoFromSensor = item
-
                 if flightDataValidator(flightInfoFromSensor):
                     aircraft_details = findOrCreateAircraft(flightInfoFromSensor)
                     flight_no = generateFlightNo(flightInfoFromSensor)

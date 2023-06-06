@@ -1,5 +1,4 @@
 from flask_restful import Resource
-from models.Flight import Flight
 import requests
 from helpers.FlightHelper import flightDataValidator
 from models.Airport import Airport
@@ -10,8 +9,8 @@ class Welcome(Resource):
 
 class Rnd(Resource):
     def get(self):
-        khulna = requests.get("http://192.168.201.3/aircraftlist.json").json();
-        dhaka = requests.get("http://192.168.30.27/aircraftlist.json").json();
+        khulna = requests.get("http://118.179.152.100/aircraftlist.json").json();
+        dhaka = requests.get("http://192.168.201.3/aircraftlist.json").json();
         #
         # Combine the JSON objects into a single list
         data_list = []
