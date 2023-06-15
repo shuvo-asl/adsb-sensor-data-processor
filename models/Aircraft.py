@@ -15,7 +15,7 @@ class Aircraft(db.Model):
     aircraft_type_id = db.Column(db.Integer, db.ForeignKey('aircraft_types.id'), nullable=False)
     registration_number = db.Column(db.String(250), nullable=False)
     mtow = db.Column(db.Float(precision=2), nullable=True)
-    mtow_unit = db.Column(db.Enum('lbs', 'kgs'), nullable=True)
+    mtow_unit = db.Column(db.Enum('lbs', 'kgs',  name='mtow_unit_enum'), nullable=True)
     purpose_type = db.Column(db.Enum(PurposeType), nullable=False)
     is_deleted = db.Column(db.Boolean, nullable=False, default=False)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow())

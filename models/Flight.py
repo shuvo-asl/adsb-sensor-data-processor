@@ -15,12 +15,12 @@ class Flight(db.Model):
     created_at = Column(DateTime, default=datetime.datetime.utcnow())
     updated_at = Column(DateTime, nullable=True)
 
-    def __init__(self, aircraft_id, flight_no, src=None, destination=None, flight_callsign=None):
-        self.aircraft_id = aircraft_id
-        self.flight_no = flight_no
-        self.src = src
-        self.destination = destination
-        self.flight_callsign = flight_callsign
+    # def __init__(self, aircraft_id, flight_no, src=None, destination=None, flight_callsign=None):
+    #     self.aircraft_id = aircraft_id
+    #     self.flight_no = flight_no
+    #     self.src = src
+    #     self.destination = destination
+    #     self.flight_callsign = flight_callsign
 
     def json(self):
         return {
