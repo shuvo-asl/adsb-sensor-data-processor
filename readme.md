@@ -7,8 +7,7 @@
 `` python app.py ``
 #### Before run this project should be create and update `.env` file value
 
-
-## Contributor
+## Contributors
 
 - [MD. Mehedi Hasan](https://www.github.com/shuvo-asl) `(Senior Software Engineer)`
 - [Ismail Hasan](https://www.github.com/ismail-asl) `(Software Engineer)`
