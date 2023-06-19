@@ -1,4 +1,5 @@
-bind = '192.168.50.13:5000'  # Specify the IP address and port to bind
+from config.env import getEnv
+bind = '{}:{}'.format(getEnv('SERVER_ADDRESS'),getEnv('APP_PORT'))  # Specify the IP address and port to bind
 workers = 4  # Number of worker processes
 timeout = 120  # Timeout value in seconds
 
