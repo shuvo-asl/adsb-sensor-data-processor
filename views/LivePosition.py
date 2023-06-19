@@ -211,7 +211,6 @@ class LivePosition(Resource):
                 flightInfoFromSensor = item
                 if flightDataValidator(flightInfoFromSensor):
 
-
                     # Check if Fli_dst airport is bangladeshi airport
                     if flightInfoFromSensor['dst'] in bd_airports_icao:
                         count+=1
