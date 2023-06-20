@@ -6,10 +6,15 @@ from celery_config import process_task
 import json
 from db import db
 class Welcome(Resource):
+
+    # This class is used for only show welcome
+
     def get(self):
         return "ADSB Flight Data Processor is running...";
 
 class RunQueue(Resource):
+
+    # This class is used for only RnD purpose
     def get(self):
         task = "Process the request"  # Modify this based on your task
         process_task.delay(task)
@@ -21,6 +26,7 @@ class RunQueue(Resource):
         return {'message': 'Task 2 enqueued'}
 
 class Rnd(Resource):
+    # This class is used for only RnD purpose
     def get(self):
         khulna = requests.get("http://118.179.152.100/aircraftlist.json").json();
         dhaka = requests.get("http://192.168.201.3/aircraftlist.json").json();
