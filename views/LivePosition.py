@@ -191,12 +191,12 @@ bd_airports_icao = ["VGBR","VGEG","VGCB","VGHS","VGTJ","VGIS","VGJR","VGKN","VGR
 class LivePosition(Resource):
     def get(self):
         khulna = requests.get("http://118.179.152.100/aircraftlist.json").json();
-        # dhaka = requests.get("http://192.168.30.27/aircraftlist.json").json();
+        dhaka = requests.get("http://192.168.30.27/aircraftlist.json").json();
         #
         # Combine the JSON objects into a single list
         data_list = []
         # data_list.extend(khulna)
-        # data_list.extend(dhaka)
+        data_list.extend(dhaka)
         hex_set = set()
         unique_data = []
         count = 0
