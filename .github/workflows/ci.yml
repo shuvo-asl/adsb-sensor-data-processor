@@ -15,6 +15,7 @@ jobs:
       DB_PASSWORD: password
       DB_HOST: localhost
       DB_NAME: adsb_fdp
+      DB_PORT: 5432
 
     steps:
       - name: Checkout code
