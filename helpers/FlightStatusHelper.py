@@ -191,3 +191,20 @@ def flight_to_destination_distance(flightInfoFromSensor=None):
             distance_from_flight_to_dst_airport = calculate_distance(flightInfoFromSensor['lat'], flightInfoFromSensor['lon'], destination_airport_details["latitude"], destination_airport_details["longitude"])
 
             return distance_from_flight_to_dst_airport
+
+
+def is_in_bangladesh(latitude, longitude):
+    # Define the boundary coordinates of Bangladesh
+    bd_boundary = {
+        'min_lat': 20.7387,
+        'max_lat': 26.6366,
+        'min_lon': 88.0086,
+        'max_lon': 92.6733
+    }
+
+    # Check if the coordinates are within the boundary
+    if (bd_boundary['min_lat'] <= latitude <= bd_boundary['max_lat']) and \
+       (bd_boundary['min_lon'] <= longitude <= bd_boundary['max_lon']):
+        return True
+    else:
+        return False

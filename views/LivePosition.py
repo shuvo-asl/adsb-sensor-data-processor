@@ -2,11 +2,11 @@ from flask_restful import Resource
 import requests
 from helpers.AircraftHelper import findOrCreateAircraft
 from helpers.FlightHelper import generateFlightNo,flightDataValidator
-from helpers.FlightStatusHelper import flight_to_destination_distance, bd_airports_icao
+from helpers.FlightStatusHelper import flight_to_destination_distance, bd_airports_icao, is_in_bangladesh
 from models.Flight import Flight
 from models.FlightPosition import FlightPosition
 from models.SensorData import SensorData
-from celery_config import update_flight_status_for_bangladeshi_landings
+from celery_config import update_flight_status_for_bangladeshi_landings, update_bangladeshi_fir_flight_status, update_non_bangladeshi_fir_flight_status
 
 class LivePosition(Resource):
     def get(self):
@@ -32,39 +32,29 @@ class LivePosition(Resource):
                 if flightDataValidator(flightInfoFromSensor):
 
                     flight_no = generateFlightNo(flightInfoFromSensor)
-
-                    flight_status = "pending"
                     
                     # Check if Fli_dst airport is bangladeshi airport
                     if flightInfoFromSensor['dst'] is not None and (flightInfoFromSensor['dst'] in bd_airports_icao):
-                        print("bd airport, update status")
+                        print("destination bd airports")
                         update_flight_status_for_bangladeshi_landings.delay(flightInfoFromSensor, flight_no) # flight status celery task
+                        
+                        item['flight_no'] = flight_no
+                        hex_set.add(hex_value)
+                        unique_data.append(item)
                     else:
-                        aircraft_details = findOrCreateAircraft(flightInfoFromSensor)
-                        flight = Flight.getFlightByFlightNo(flight_no)
+                        is_in_bangladeshi_area = is_in_bangladesh(flightInfoFromSensor['lat'], flightInfoFromSensor['lon'])
 
-                        if flight is None:
-                            flight = Flight(**{"aircraft_id": aircraft_details['id'], "flight_no": flight_no,
-                                            "src": flightInfoFromSensor['org']
-                                , "destination": flightInfoFromSensor['dst'],
-                                            "flight_callsign": flightInfoFromSensor['fli'], "status":flight_status})
-                            flight.save()
-                        flight = flight.json()
+                        if is_in_bangladeshi_area:
+                            print("using bangladeshi fir",flightInfoFromSensor['fli'])
+                            update_bangladeshi_fir_flight_status.delay(flightInfoFromSensor, flight_no)
 
-                        flightPositionInstance = FlightPosition(**{
-                            "flight_id": flight['id'],
-                            "lat": flightInfoFromSensor['lat'],
-                            'lon': flightInfoFromSensor['lon'],
-                            "altitude": flightInfoFromSensor['alt'],
-                            "speed": flightInfoFromSensor['spd'],
-                            "angle": flightInfoFromSensor['trk'],
-                            "response_text": flightInfoFromSensor,
-                        })
-                        flightPositionInstance.save()
+                            item['flight_no'] = flight_no
+                            hex_set.add(hex_value)
+                            unique_data.append(item)
+                        else:
+                            print("not using bangladeshi fir",flightInfoFromSensor['fli'])
+                            update_non_bangladeshi_fir_flight_status.delay(flight_no)
 
-                    item['flight_no'] =flight_no
-                    hex_set.add(hex_value)
-                    unique_data.append(item)
         return {
             "status": "success",
             "data": unique_data
