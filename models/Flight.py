@@ -11,6 +11,7 @@ class Flight(db.Model):
     flight_no = db.Column(db.String,unique=True)
     src = db.Column(db.String,nullable=True)
     destination = db.Column(db.String,nullable=True)
+    status = db.Column(db.Enum('running', 'completed', 'pending',  name='flight_status_enum'), nullable=False, default='pending')
     flight_callsign = db.Column(db.String,nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow())
     updated_at = Column(DateTime, nullable=True)
