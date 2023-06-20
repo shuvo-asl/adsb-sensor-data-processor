@@ -9,6 +9,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      DB_DRIVER: postgres
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_HOST: localhost
+      DB_NAME: adsb_fdp
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
