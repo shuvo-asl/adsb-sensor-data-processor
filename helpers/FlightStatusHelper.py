@@ -193,6 +193,24 @@ def flight_to_destination_distance(flightInfoFromSensor=None):
             return distance_from_flight_to_dst_airport
 
 
+# Read in the Shapefile of country boundaries
+import geopandas as gpd
+import os
+current_dir = os.path.dirname(os.path.abspath(__file__))
+countries = gpd.read_file(current_dir+'/countries/ne_10m_admin_0_countries.shp')
+
+def is_points_in_bangladesh(point):
+    # Extract the polygon for Bangladesh
+    bangladesh = countries[countries['NAME'] == 'Bangladesh'].iloc[0].geometry
+
+    if bangladesh.contains(point):
+        # print('The point is in Bangladesh')
+        return True
+    else:
+        # print('The point is not in Bangladesh')
+        return False
+
+#deprecated
 def is_in_bangladesh(latitude, longitude):
     # Define the boundary coordinates of Bangladesh
     bd_boundary = {

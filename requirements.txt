@@ -103,3 +103,12 @@ Werkzeug==2.2.3
 gunicorn==20.1.0
 PyMySQL==1.0.3
 python-dotenv==1.0.0
+attrs==23.1.0
+cligj==0.7.2
+Fiona==1.9.3
+geopandas==0.12.2
+munch==2.5.0
+numpy==1.24.3
+pandas==2.0.1
+pyproj==3.5.0
+shapely==2.0.1

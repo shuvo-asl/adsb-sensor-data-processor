@@ -81,9 +81,8 @@ def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no
             "angle": flightInfoFromSensor['trk'],
             "response_text": flightInfoFromSensor,
         })
-        with app.app_context():
-            db.session.add(flightPositionInstance)
-            db.session.commit()
+
+        flightPositionInstance.save()
         print("Completed from flight_and_its_position_store",flight_status, flight_no)
         return True
 
@@ -96,33 +95,7 @@ def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no
 def update_bangladeshi_fir_flight_status(flightInfoFromSensor, flight_no):
     try:
         flight_status = "running"
-
-        aircraft_details = findOrCreateAircraft(flightInfoFromSensor)
-        flight = Flight.getFlightByFlightNo(flight_no)
-
-        if flight is not None:
-            flight.status = flight_status
-            db.session.commit()
-
-        else:
-            flight = Flight(**{"aircraft_id": aircraft_details['id'], "flight_no": flight_no,
-                            "src": flightInfoFromSensor['org']
-                , "destination": flightInfoFromSensor['dst'],
-                            "flight_callsign": flightInfoFromSensor['fli'], "status":flight_status})
-            flight.save()
-
-        flight = flight.json()
-
-        flightPositionInstance = FlightPosition(**{
-            "flight_id": flight['id'],
-            "lat": flightInfoFromSensor['lat'],
-            'lon': flightInfoFromSensor['lon'],
-            "altitude": flightInfoFromSensor['alt'],
-            "speed": flightInfoFromSensor['spd'],
-            "angle": flightInfoFromSensor['trk'],
-            "response_text": flightInfoFromSensor,
-        })
-        flightPositionInstance.save()
+        flight_and_its_position_store.delay(flightInfoFromSensor, flight_status, flight_no)
 
         print("Completed from update_bangladeshi_fir_flight_status")
         return True

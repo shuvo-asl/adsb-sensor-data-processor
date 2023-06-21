@@ -2,7 +2,8 @@ from flask_restful import Resource
 import requests
 from helpers.AircraftHelper import findOrCreateAircraft
 from helpers.FlightHelper import generateFlightNo,flightDataValidator
-from helpers.FlightStatusHelper import flight_to_destination_distance, bd_airports_icao, is_in_bangladesh
+from helpers.FlightStatusHelper import flight_to_destination_distance, bd_airports_icao, is_in_bangladesh, is_points_in_bangladesh
+from shapely.geometry import Point
 from models.Flight import Flight
 from models.FlightPosition import FlightPosition
 from models.SensorData import SensorData
@@ -42,7 +43,8 @@ class LivePosition(Resource):
                         hex_set.add(hex_value)
                         unique_data.append(item)
                     else:
-                        is_in_bangladeshi_area = is_in_bangladesh(flightInfoFromSensor['lat'], flightInfoFromSensor['lon'])
+                        # is_in_bangladeshi_area = is_in_bangladesh(flightInfoFromSensor['lat'], flightInfoFromSensor['lon'])
+                        is_in_bangladeshi_area = is_points_in_bangladesh(Point(flightInfoFromSensor['lon'],flightInfoFromSensor['lat']))
 
                         if is_in_bangladeshi_area:
                             print("using bangladeshi fir",flightInfoFromSensor['fli'])
