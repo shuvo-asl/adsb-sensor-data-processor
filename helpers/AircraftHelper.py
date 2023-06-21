@@ -2,6 +2,7 @@ from models.Aircraft import Aircraft
 from models.AircraftType import AircraftType
 from db import db
 
+# This method is able to findOrCreateAircraft form the database
 def findOrCreateAircraft(data):
     aircraft = Aircraft.findAircraftByRegistrationNumber(data['reg']);
 

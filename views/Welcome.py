@@ -5,10 +5,14 @@ from models.Airport import Airport
 import json
 from db import db
 class Welcome(Resource):
+
+    # This class is used for only show welcome
+
     def get(self):
         return "ADSB Flight Data Processor is running...";
 
 class Rnd(Resource):
+    # This class is used for only RnD purpose
     def get(self):
         khulna = requests.get("http://118.179.152.100/aircraftlist.json").json();
         dhaka = requests.get("http://192.168.201.3/aircraftlist.json").json();
