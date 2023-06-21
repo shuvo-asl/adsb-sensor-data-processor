@@ -11,13 +11,15 @@ from celery_config import update_flight_status_for_bangladeshi_landings, update_
 
 class LivePosition(Resource):
     def get(self):
-        khulna = requests.get("http://118.179.152.100/aircraftlist.json").json();
         dhaka = requests.get("http://192.168.30.27/aircraftlist.json").json();
+        khulna = requests.get("http://118.179.152.100/aircraftlist.json").json();
+        chittagong = requests.get("http://45.125.223.124/aircraftlist.json").json();
         #
         # Combine the JSON objects into a single list
         data_list = []
-        # data_list.extend(khulna)
         data_list.extend(dhaka)
+        data_list.extend(khulna)
+        data_list.extend(chittagong)
         hex_set = set()
         unique_data = []
         count = 0
