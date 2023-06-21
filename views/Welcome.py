@@ -2,7 +2,6 @@ from flask_restful import Resource
 import requests
 from helpers.FlightHelper import flightDataValidator
 from models.Airport import Airport
-from celery_config import process_task
 import json
 from db import db
 class Welcome(Resource):
@@ -11,19 +10,6 @@ class Welcome(Resource):
 
     def get(self):
         return "ADSB Flight Data Processor is running...";
-
-class RunQueue(Resource):
-
-    # This class is used for only RnD purpose
-    def get(self):
-        task = "Process the request"  # Modify this based on your task
-        process_task.delay(task)
-        return "Running"
-
-    def post(self):
-        task_data = "Process the request task_data"
-        process_task.delay(task_data)
-        return {'message': 'Task 2 enqueued'}
 
 class Rnd(Resource):
     # This class is used for only RnD purpose
