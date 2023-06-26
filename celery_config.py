@@ -41,9 +41,9 @@ def update_flight_status_for_bangladeshi_landings(flightInfoFromSensor, flight_n
         else:
             flight_status = "running"
 
-        print("Completed from update_flight_status_for_bangladeshi_landings")
+        # print("Completed from update_flight_status_for_bangladeshi_landings")
         
-        flight_and_its_position_store.delay(flightInfoFromSensor, flight_status, flight_no)
+        flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no)
 
         return True
 
@@ -52,7 +52,7 @@ def update_flight_status_for_bangladeshi_landings(flightInfoFromSensor, flight_n
         return False
 
 
-@celery_app.task
+# @celery_app.task
 def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no):
     try:
         aircraft_details = findOrCreateAircraft(flightInfoFromSensor)
@@ -83,7 +83,7 @@ def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no
         })
 
         flightPositionInstance.save()
-        print("Completed from flight_and_its_position_store",flight_status, flight_no)
+        # print("Completed from flight_and_its_position_store",flight_status, flight_no)
         return True
 
     except Exception as e:
@@ -95,9 +95,9 @@ def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no
 def update_bangladeshi_fir_flight_status(flightInfoFromSensor, flight_no):
     try:
         flight_status = "running"
-        flight_and_its_position_store.delay(flightInfoFromSensor, flight_status, flight_no)
+        flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no)
 
-        print("Completed from update_bangladeshi_fir_flight_status")
+        # print("Completed from update_bangladeshi_fir_flight_status")
         return True
 
     except Exception as e:
@@ -114,7 +114,7 @@ def update_non_bangladeshi_fir_flight_status(flight_no):
         if flight is not None and len(flight_position)>0:
             flight.status = "completed"
             db.session.commit()
-        print("Completed from update_non_bangladeshi_fir_flight_status")
+        # print("Completed from update_non_bangladeshi_fir_flight_status")
 
         return True
 
