@@ -8,7 +8,15 @@ from shapely.geometry import Point
 from models.Flight import Flight
 from models.FlightPosition import FlightPosition
 from models.SensorData import SensorData
-from celery_config import update_flight_status_for_bangladeshi_landings, update_bangladeshi_fir_flight_status, update_non_bangladeshi_fir_flight_status
+from helpers.rq_helper import update_flight_status_for_bangladeshi_landings, update_bangladeshi_fir_flight_status, update_non_bangladeshi_fir_flight_status
+
+from rq import Queue
+from redis import Redis
+
+
+redis_conn = Redis()  # Create a Redis connection
+q = Queue(connection=redis_conn)  # Create an RQ queue
+
 
 class LivePosition(Resource):
     def get(self):
@@ -59,7 +67,7 @@ class LivePosition(Resource):
                     # Check if Fli_dst airport is bangladeshi airport
                     if flightInfoFromSensor['dst'] is not None and (flightInfoFromSensor['dst'] in bd_airports_icao):
                         # print("destination bd airports")
-                        update_flight_status_for_bangladeshi_landings.delay(flightInfoFromSensor, flight_no) # flight status celery task
+                        q.enqueue(update_flight_status_for_bangladeshi_landings, flightInfoFromSensor, flight_no)  # Enqueue the task
                         
                         item['flight_no'] = flight_no
                         hex_set.add(hex_value)
@@ -70,14 +78,14 @@ class LivePosition(Resource):
 
                         if is_in_bangladeshi_area:
                             # print("using bangladeshi fir",flightInfoFromSensor['fli'])
-                            update_bangladeshi_fir_flight_status.delay(flightInfoFromSensor, flight_no)
+                            q.enqueue(update_bangladeshi_fir_flight_status, flightInfoFromSensor, flight_no)  # Enqueue the task
 
                             item['flight_no'] = flight_no
                             hex_set.add(hex_value)
                             unique_data.append(item)
                         else:
                             # print("not using bangladeshi fir",flightInfoFromSensor['fli'])
-                            update_non_bangladeshi_fir_flight_status.delay(flight_no)
+                            q.enqueue(update_non_bangladeshi_fir_flight_status, flight_no)  # Enqueue the task
 
         return {
             "status": "success",
