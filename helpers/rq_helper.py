@@ -3,6 +3,7 @@ from models.Flight import Flight
 from models.FlightPosition import FlightPosition
 from helpers.AircraftHelper import findOrCreateAircraft
 from db import db
+from datetime import datetime
 
 stol_distance = 1  # STOL distance 1 km
 stol_speed = 50  # STOL speed 50 nautical miles
@@ -42,6 +43,7 @@ def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no
 
         else:
             flight.status = flight_status
+            flight.updated_at = datetime.utcnow()
             db.session.commit()
 
         flight = flight.json()
@@ -84,6 +86,7 @@ def update_non_bangladeshi_fir_flight_status(flight_no):
         flight_position = FlightPosition.getAllPositionHistoryByFlightNo(flight_no)
         if flight is not None and len(flight_position)>0:
             flight.status = "completed"
+            flight.updated_at = datetime.utcnow()
             db.session.commit()
         print("Completed from update_non_bangladeshi_fir_flight_status")
 

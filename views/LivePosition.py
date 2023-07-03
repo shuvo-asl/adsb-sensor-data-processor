@@ -67,7 +67,7 @@ class LivePosition(Resource):
                     # Check if Fli_dst airport is bangladeshi airport
                     if flightInfoFromSensor['dst'] is not None and (flightInfoFromSensor['dst'] in bd_airports_icao):
                         # print("destination bd airports")
-                        q.enqueue(update_flight_status_for_bangladeshi_landings, kwargs={"flightInfoFromSensor":flightInfoFromSensor, "flight_no":flight_no}, job_timeout=10)  # Enqueue the task
+                        q.enqueue(update_flight_status_for_bangladeshi_landings, kwargs={"flightInfoFromSensor":flightInfoFromSensor, "flight_no":flight_no})  # Enqueue the task
                         
                         item['flight_no'] = flight_no
                         hex_set.add(hex_value)
@@ -78,14 +78,14 @@ class LivePosition(Resource):
 
                         if is_in_bangladeshi_area:
                             # print("using bangladeshi fir",flightInfoFromSensor['fli'])
-                            q.enqueue(update_bangladeshi_fir_flight_status, kwargs={"flightInfoFromSensor":flightInfoFromSensor, "flight_no":flight_no}, job_timeout=10)  # Enqueue the task
+                            q.enqueue(update_bangladeshi_fir_flight_status, kwargs={"flightInfoFromSensor":flightInfoFromSensor, "flight_no":flight_no})  # Enqueue the task
 
                             item['flight_no'] = flight_no
                             hex_set.add(hex_value)
                             unique_data.append(item)
                         else:
                             # print("not using bangladeshi fir",flightInfoFromSensor['fli'])
-                            q.enqueue(update_non_bangladeshi_fir_flight_status, kwargs={"flight_no":flight_no}, job_timeout=10)  # Enqueue the task
+                            q.enqueue(update_non_bangladeshi_fir_flight_status, kwargs={"flight_no":flight_no})  # Enqueue the task
 
         return {
             "status": "success",
