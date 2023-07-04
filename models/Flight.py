@@ -31,7 +31,7 @@ class Flight(db.Model):
             "src":self.src,
             "destination":self.destination,
             "flight_callsign":self.flight_callsign,
-            "created_at":(self.created_at).strftime("%d-%m-%Y, %H:%M:%S")
+            "created_at":(self.created_at).strftime("%d-%m-%Y, %H:%M:%S"),
         }
 
     @classmethod
@@ -41,6 +41,9 @@ class Flight(db.Model):
     @classmethod
     def getFlightByFlightNo(cls, flight_no):
         return cls.query.filter_by(flight_no=flight_no).first()
+    @classmethod
+    def getFlightByStatus(cls, status):
+        return cls.query.filter_by(status=status).all()
 
     def save(self):
         db.session.add(self)
