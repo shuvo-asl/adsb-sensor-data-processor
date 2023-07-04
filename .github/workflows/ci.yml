@@ -13,16 +13,13 @@ jobs:
       DB_DRIVER: postgres
       DB_USER: postgres
       DB_PASSWORD: password
-      DB_HOST: 127.0.0.1
+      DB_HOST: localhost
       DB_NAME: adsb_fdp
       DB_PORT: 5432
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Start PostgreSQL service
-        run: sudo service postgresql start
 
       - name: Set up Python
         uses: actions/setup-python@v2
