@@ -36,14 +36,6 @@ class LivePosition(Resource):
             print('Error from sensor Dhaka:', str(e))
 
         try:
-            response = requests.get("http://118.179.152.100/aircraftlist.json", timeout=1)
-            response.raise_for_status()
-            khulna = response.json()
-            data_list.extend(khulna)
-        except RequestException as e:
-            print('Error from sensor Khulna:', str(e))
-
-        try:
             response = requests.get("http://45.125.223.124/aircraftlist.json", timeout=1)
             response.raise_for_status()
             chittagong = response.json()

@@ -32,6 +32,8 @@ class Flight(db.Model):
             "destination":self.destination,
             "flight_callsign":self.flight_callsign,
             "created_at":(self.created_at).strftime("%d-%m-%Y, %H:%M:%S"),
+            "updated_at":(self.updated_at).strftime("%d-%m-%Y, %H:%M:%S") if self.updated_at is not None else None,
+            "status":self.status
         }
 
     @classmethod
