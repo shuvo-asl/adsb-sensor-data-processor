@@ -45,7 +45,9 @@ class Flight(db.Model):
         return cls.query.filter_by(flight_no=flight_no).first()
     @classmethod
     def getFlightByStatus(cls, status):
-        return cls.query.filter_by(status=status).all()
+        # flights = cls.query.filter_by(status=status).order_by(cls.updated_at.desc()).all()
+        flights = cls.query.filter_by(status=status).order_by(cls.id.desc()).all()
+        return flights
 
     def save(self):
         db.session.add(self)

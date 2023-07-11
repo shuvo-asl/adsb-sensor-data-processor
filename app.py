@@ -6,6 +6,7 @@ from views.FlightPositionView import FlightPositionView
 from views.AirportView import AirportView
 from views.FlightView import FlightView
 from models.Flight import Flight
+from models.FlightPosition import FlightPosition
 from config.env import getEnv
 from flask_socketio import SocketIO, emit
 import time
@@ -40,9 +41,32 @@ def handle_flight_status(new_flight_status):
             else:
                 flights = []
             
-            flights = [flight.json() for flight in flights]
+            updated_flights = []
 
-            socketio.emit('data', flights)
+            if len(flights) > 0:
+                if flight_data['flight_status'] == 'running':
+                    for fli in flights:
+                        last_flight_position = FlightPosition.query \
+                        .join(Flight) \
+                        .filter(Flight.id == fli.id) \
+                        .order_by(FlightPosition.id.desc()) \
+                        .first()
+
+                        flight_json = fli.json()
+                        flight_json['lat'] = last_flight_position.lat
+                        flight_json['lon'] = last_flight_position.lon
+
+                        updated_flights.append(flight_json)
+                else:
+                    for fli in flights:
+                        flight_json = fli.json()
+                        flight_json['lat'] = None
+                        flight_json['lon'] = None
+
+                        updated_flights.append(flight_json)
+                # flights = [flight.json() for flight in flights]
+
+            socketio.emit('data', updated_flights)
             # time.sleep(2)
 
 @socketio.on('message')
