@@ -11,6 +11,9 @@ from config.env import getEnv
 from flask_socketio import SocketIO, emit
 import time
 import eventlet
+
+from datetime import date, datetime, timedelta
+
 eventlet.monkey_patch()
 
 app = bootstrap.app
@@ -31,15 +34,23 @@ def handle_disconnect():
     print('Client disconnected')
 
 @socketio.on('flight_status')
-def handle_flight_status(new_flight_status):
+def handle_flight_status(new_flight_status, filter_date = None):
     flight_data['flight_status'] = new_flight_status
     # print('Received flight_status:', flight_data['flight_status'])
     with app.app_context():
         # while True:
+            flights = []
             if flight_data['flight_status'] is not None:
-                flights = Flight.getFlightByStatus(flight_data['flight_status'])
-            else:
-                flights = []
+
+                if flight_data['flight_status'] == 'running':
+                    flights = Flight.getRunningFlights()
+
+                else:
+                    if filter_date is not None and filter_date!='':
+                        flight_date = datetime.strptime(filter_date, '%Y-%m-%d').date()
+                        flights = Flight.getCompletedFlightsByStatusAndDate(flight_data['flight_status'], flight_date)
+                    else:
+                        flights = Flight.getFlightByStatus(flight_data['flight_status'])
             
             updated_flights = []
 
@@ -64,7 +75,6 @@ def handle_flight_status(new_flight_status):
                         flight_json['lon'] = None
 
                         updated_flights.append(flight_json)
-                # flights = [flight.json() for flight in flights]
 
             socketio.emit('data', updated_flights)
             # time.sleep(2)
