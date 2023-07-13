@@ -11,6 +11,7 @@ from config.env import getEnv
 from flask_socketio import SocketIO, emit
 import time
 import eventlet
+from helpers.SocketHelper import FlightPositionHelper, FlightStatusHelper
 
 from datetime import date, datetime, timedelta
 
@@ -35,49 +36,16 @@ def handle_disconnect():
 
 @socketio.on('flight_status')
 def handle_flight_status(new_flight_status, filter_date = None):
-    flight_data['flight_status'] = new_flight_status
-    # print('Received flight_status:', flight_data['flight_status'])
-    with app.app_context():
-        # while True:
-            flights = []
-            if flight_data['flight_status'] is not None:
+    # with app.app_context():
 
-                if flight_data['flight_status'] == 'running':
-                    flights = Flight.getRunningFlights()
+    data = FlightStatusHelper(new_flight_status, filter_date)
+    socketio.emit('data', data)
 
-                else:
-                    if filter_date is not None and filter_date!='':
-                        flight_date = datetime.strptime(filter_date, '%Y-%m-%d').date()
-                        flights = Flight.getCompletedFlightsByStatusAndDate(flight_data['flight_status'], flight_date)
-                    else:
-                        flights = Flight.getFlightByStatus(flight_data['flight_status'])
-            
-            updated_flights = []
+@socketio.on('flight_no')
+def handle_flight_location(flight_no = None):
+    flight_data = FlightPositionHelper(flight_no)
+    socketio.emit('flight_data', flight_data)
 
-            if len(flights) > 0:
-                if flight_data['flight_status'] == 'running':
-                    for fli in flights:
-                        last_flight_position = FlightPosition.query \
-                        .join(Flight) \
-                        .filter(Flight.id == fli.id) \
-                        .order_by(FlightPosition.id.desc()) \
-                        .first()
-
-                        flight_json = fli.json()
-                        flight_json['lat'] = last_flight_position.lat
-                        flight_json['lon'] = last_flight_position.lon
-
-                        updated_flights.append(flight_json)
-                else:
-                    for fli in flights:
-                        flight_json = fli.json()
-                        flight_json['lat'] = None
-                        flight_json['lon'] = None
-
-                        updated_flights.append(flight_json)
-
-            socketio.emit('data', updated_flights)
-            # time.sleep(2)
 
 @socketio.on('message')
 def handle_message(data):

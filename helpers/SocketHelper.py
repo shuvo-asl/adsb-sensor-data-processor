@@ -1,0 +1,85 @@
+from flask_restful import Resource
+from models.FlightPosition import FlightPosition
+from models.Flight import Flight
+from models.Airport import Airport
+from datetime import date, datetime, timedelta
+
+def FlightStatusHelper(new_flight_status, filter_date = None):
+    flights = []
+
+    if new_flight_status is not None:
+
+        if new_flight_status == 'running':
+            flights = Flight.getRunningFlights()
+
+        else:
+            if filter_date is not None and filter_date!='':
+                flight_date = datetime.strptime(filter_date, '%Y-%m-%d').date()
+                flights = Flight.getCompletedFlightsByStatusAndDate(new_flight_status, flight_date)
+            else:
+                flights = Flight.getFlightByStatus(new_flight_status)
+    
+    updated_flights = []
+
+    if len(flights) > 0:
+        if new_flight_status == 'running':
+            for fli in flights:
+                last_flight_position = FlightPosition.query \
+                .join(Flight) \
+                .filter(Flight.id == fli.id) \
+                .order_by(FlightPosition.id.desc()) \
+                .first()
+
+                flight_json = fli.json()
+                flight_json['lat'] = last_flight_position.lat
+                flight_json['lon'] = last_flight_position.lon
+
+                updated_flights.append(flight_json)
+        else:
+            for fli in flights:
+                flight_json = fli.json()
+                flight_json['lat'] = None
+                flight_json['lon'] = None
+
+                updated_flights.append(flight_json)
+
+    return updated_flights
+
+
+
+def FlightPositionHelper(flight_no):
+
+    position_histories = [] #declare this array to store all of positional history
+
+    # Get the flight details
+    flight = Flight.getFlightByFlightNo(flight_no)
+
+    # IF the flight is not found by the flight no then return response failed with code 404
+    if flight_no is None or flight is None:
+        return {
+            "status" : "Failed",
+            "msg":"Unknown Request"
+        },404
+
+    # convert flight class object to json
+    flight = flight.json()
+
+    #renaming the key of src and destination airport which is doing for frontend alignment
+    flight['org_airport'] = Airport.getAirportByIcao(flight['src'])
+    flight['dst_airport'] = Airport.getAirportByIcao(flight['destination'])
+
+    # get All history by flight no
+    histories = FlightPosition.getAllPositionHistoryByFlightNo(flight_no)
+
+    # If the flight has histories then need to covert it to json and store in the position histories variable
+    if histories is not None:
+        position_histories = [item.json() for item in histories]
+
+    # make the response data
+    data = {
+        "flight_information":flight,
+        "position_histories":position_histories
+    }
+    # return the response success with 200 http code
+    return {"status":"success", "data":data}
+
