@@ -12,7 +12,7 @@ from flask_socketio import SocketIO, emit, join_room
 from flask import request
 import time
 import eventlet
-from helpers.SocketHelper import FlightPositionHelper, FlightStatusHelper
+from helpers.SocketHelper import FlightPositionHelper, FlightStatusHelper, FlightsLiveLocation
 
 from datetime import date, datetime, timedelta
 
@@ -51,6 +51,17 @@ def handle_flight_location(flight_no = None):
 
     flight_data = FlightPositionHelper(flight_no)
     socketio.emit('flight_data', flight_data, room=room)
+
+
+@socketio.on('live_position')
+def handle_flights_live_position(flight_status = None):
+    client_sid = request.sid
+    room = f'flight_{client_sid}_{flight_status}'  # Create a unique room for each flight and client combination
+    join_room(room)  # Join the room associated with the flight and client
+    flights_position_data = {}
+    if flight_status =='running':
+        flights_position_data = FlightsLiveLocation()
+    socketio.emit('live_position_data', flights_position_data, room=room)
 
 
 @socketio.on('message')
