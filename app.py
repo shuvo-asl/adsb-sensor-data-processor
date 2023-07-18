@@ -8,7 +8,8 @@ from views.FlightView import FlightView
 from models.Flight import Flight
 from models.FlightPosition import FlightPosition
 from config.env import getEnv
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room
+from flask import request
 import time
 import eventlet
 from helpers.SocketHelper import FlightPositionHelper, FlightStatusHelper
@@ -43,8 +44,13 @@ def handle_flight_status(new_flight_status, filter_date = None):
 
 @socketio.on('flight_no')
 def handle_flight_location(flight_no = None):
+    client_sid = request.sid
+    room = f'flight_{flight_no}_{client_sid}'  # Create a unique room for each flight and client combination
+
+    join_room(room)  # Join the room associated with the flight and client
+
     flight_data = FlightPositionHelper(flight_no)
-    socketio.emit('flight_data', flight_data)
+    socketio.emit('flight_data', flight_data, room=room)
 
 
 @socketio.on('message')
