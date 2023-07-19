@@ -1,13 +1,37 @@
+from celery import Celery
+from time import sleep
 from helpers.FlightStatusHelper import flight_to_destination_distance
 from models.Flight import Flight
 from models.FlightPosition import FlightPosition
 from helpers.AircraftHelper import findOrCreateAircraft
+from bootstrap import bootstrap
 from db import db
 from datetime import datetime
+app = bootstrap.app
+
+app.config.update(
+    CELERY_BROKER_URL='redis://localhost:6379/0',
+    CELERY_RESULT_BACKEND='redis://localhost:6379/0'
+)
 
 stol_distance = 1  # STOL distance 1 km
 stol_speed = 50  # STOL speed 50 nautical miles
 
+def make_celery(app):
+    celery = Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
+    celery.conf.update(app.config)
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
+
+celery_app = make_celery(app)
+
+@celery_app.task
 def update_flight_status_for_bangladeshi_landings(flightInfoFromSensor, flight_no, order_number):
     flight_status = "pending"
     try:
@@ -27,7 +51,7 @@ def update_flight_status_for_bangladeshi_landings(flightInfoFromSensor, flight_n
         print("Exception from update_flight_status_for_bangladeshi_landings", str(e))
         return False
 
-
+@celery_app.task
 def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no, order_number):
     try:
         aircraft_details = findOrCreateAircraft(flightInfoFromSensor)
@@ -69,6 +93,7 @@ def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no
         return False
 
 
+@celery_app.task
 def update_bangladeshi_fir_flight_status(flightInfoFromSensor, flight_no, order_number):
     try:
         flight_status = "running"
@@ -81,6 +106,8 @@ def update_bangladeshi_fir_flight_status(flightInfoFromSensor, flight_no, order_
         print("Exception from update_non_bangladeshi_fir_flight_status", str(e))
         return False
 
+
+@celery_app.task
 def update_non_bangladeshi_fir_flight_status(flight_no):
     try:
         
