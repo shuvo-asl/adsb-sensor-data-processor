@@ -3,6 +3,9 @@ from sqlalchemy import desc
 from sqlalchemy import Column, DateTime
 from models.Aircraft import Aircraft
 from datetime import date, datetime, timedelta
+from sqlalchemy import JSON
+from sqlalchemy import and_
+
 class Flight(db.Model):
     __tablename__ = 'flights'
     id = db.Column(db.Integer,primary_key=True)
@@ -13,6 +16,7 @@ class Flight(db.Model):
     destination = db.Column(db.String,nullable=True)
     status = db.Column(db.Enum('running', 'completed', 'pending',  name='flight_status_enum'), nullable=False, default='pending')
     flight_callsign = db.Column(db.String,nullable=True)
+    pod_response = db.Column(JSON,nullable=True)
     created_at = Column(DateTime, default= datetime.utcnow())
     updated_at = Column(DateTime, nullable=True)
 
@@ -33,7 +37,8 @@ class Flight(db.Model):
             "flight_callsign":self.flight_callsign,
             "created_at":(self.created_at).strftime("%d-%m-%Y, %H:%M:%S"),
             "updated_at":(self.updated_at).strftime("%d-%m-%Y, %H:%M:%S") if self.updated_at is not None else None,
-            "status":self.status
+            "status":self.status,
+            "pod_response":self.pod_response,
         }
 
     @classmethod
@@ -51,7 +56,19 @@ class Flight(db.Model):
 
     @classmethod
     def getCompletedFlightsByStatusAndDate(cls, status, date):
-        flights = cls.query.filter_by(status=status).filter(db.func.date(cls.created_at) == date).order_by(cls.id.desc()).all()
+        flights = cls.query.filter_by(status=status).filter(db.func.date(cls.updated_at) == date).order_by(cls.id.desc()).all()
+        return flights
+
+    @classmethod
+    def findCompletedFlightsByCallsignRegNoAndDate(cls, flight_callsign, registration_number, date):
+        flights = cls.query.join(Aircraft).filter(
+            and_(
+                cls.flight_callsign == flight_callsign,
+                Aircraft.registration_number == registration_number,
+                cls.status == 'completed',
+                db.func.date(cls.updated_at) == date,
+            )
+        ).order_by(cls.id.desc()).first()
         return flights
 
     @classmethod
