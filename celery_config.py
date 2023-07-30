@@ -10,7 +10,8 @@ from db import db
 from datetime import datetime, timedelta
 from config.env import getEnv
 import requests
-
+import logging
+from logging.handlers import RotatingFileHandler
 app = bootstrap.app
 
 # Celery configuration
@@ -33,6 +34,19 @@ def make_celery(app):
 
 celery_app = make_celery(app)
 
+# Configure logging
+log_file = 'celery.log'
+log_level = logging.DEBUG
+
+# Create a file handler to store logs in the specified file
+file_handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5)
+file_handler.setLevel(log_level)
+file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+
+# Add the file handler to the app's logger
+app.logger.addHandler(file_handler)
+app.logger.setLevel(log_level)
 
 def get_pod_access_token(api_url, pod_client_secret_key):
     headers = {
@@ -119,6 +133,7 @@ def send_flights_public_url(update_flight_url, pod_access_token, previous_date, 
 
 @celery_app.task
 def pod_task():
+    app.logger.info('Task started')
     pod_client_secret_key = getEnv('POD_CLIENT_SECRET_KEY')
 
     api_url = getEnv('POD_ACCESS_TOKEN_API')
@@ -135,43 +150,64 @@ def pod_task():
 
     my_flights = Flight.getCompletedFlightsByStatusAndDate('completed', previous_date)
 
-    previous_date = (today + timedelta(days=6)).strftime('%Y-%m-%d') # this is for testing, hide it in production
+    previous_date = (today + timedelta(days=3)).strftime('%Y-%m-%d') # this is for testing, hide it in production
 
-    pod_flights = get_flights_by_date(flight_url, pod_access_token, previous_date) # getting flight from pod of previous date
-
-    if 'error' not in pod_flights:
-        common_flights = [] # temporary storing all those pod flights in my stored adsb database's flight. 
-        for flight in pod_flights:
-            res = Flight.findCompletedFlightsByCallsignRegNoAndDate(flight['call_sign'], flight['aircraft_no'], previous_date) # finding pod flights in my stored adsb database's flight. 
-            if res is not None:
-                common_flights.append(res)
+    # getting flight from pod of previous date
+    try:
+        pod_flights = get_flights_by_date(flight_url, pod_access_token, previous_date) 
+        app.logger.info(f'Found flights from pod successfully')
+    except Exception as e:
+        app.logger.error(f'Exception in getting flights from pod')
+        return False
     
-        final_flights = []
-        for fli in common_flights:
+    if 'error' not in pod_flights:
+
+        if len(pod_flights) > 0:
+            # temporary storing all those pod flights in my stored adsb database's flight. 
+            common_flights = [] 
+            for flight in pod_flights:
+                # finding pod flights in my stored adsb database's flight. 
+                res = Flight.findCompletedFlightsByCallsignRegNoAndDate(flight['call_sign'], flight['aircraft_no'], previous_date) 
+                if res is not None:
+                    common_flights.append(res)
+        
+            final_flights = []
+            for fli in common_flights:
+                
+                # getting flights details from pod
+                try:
+                    pod_flights_details = get_flights_details_by_date_callsign_and_aircraft_no(flight_details_url, pod_access_token, previous_date, fli.flight_callsign, fli.aircraft.registration_number)
+                    app.logger.info(f"Found flight's details from pod, callsign: {fli.flight_callsign}")
+                except Exception as e:
+                    app.logger.error(f'Exception in getting flights details from pod')
+
+                # if flight details from pod is matched with my requesting flight without error, then store details in flight table
+                if pod_flights_details and ('error' not in pod_flights_details):
+                    if pod_flights_details['call_sign'] == fli.flight_callsign:    # commented for debug mode, implemented for live mode.
+                        if 'flight_itinerary' in pod_flights_details:
+                            fli.src = pod_flights_details['flight_itinerary']['flight_leg_1']['departure']['icao']
+                            fli.destination = pod_flights_details['flight_itinerary']['flight_leg_1']['arrival']['icao']
+                            fli.pod_response = pod_flights_details
+                            fli.save()
+                            app.logger.info(f"Adsb Flight updated with pod flight details, callsign: {fli.flight_callsign}")
+                            final_flights.append(fli) # storing those flights which are being updated by pod flights data. Stored for sending public url
+
+            # sending flight public url to another api to view flight's route
+            for final_fli in final_flights:
+                public_url = str(adsb_public_url) + final_fli.flight_no
+                try:
+                    update_pod_flight = send_flights_public_url(update_flight_url, pod_access_token, previous_date, final_fli.flight_callsign, final_fli.aircraft.registration_number, public_url)
+                    app.logger.info(f"Pod Flight updated with public Url, callsign: {final_fli.flight_callsign}")
+                except Exception as e:
+                    app.logger.error(f"Exception in updating flight's public url in pod, callsign: {final_fli.flight_callsign}")
+
+                if 'error' in update_pod_flight:
+                    app.logger.error(f"{update_pod_flight['error']}. Error from updating public url id pod, callsign: {final_fli.flight_callsign}")
             
-            # getting flights details from pod
-            pod_flights_details = get_flights_details_by_date_callsign_and_aircraft_no(flight_details_url, pod_access_token, previous_date, fli.flight_callsign, fli.aircraft.registration_number)
+        else:
+            app.logger.info(f'Flights not found on the previous day.')
 
-            # if flight details from pod is matched with my requesting flight without error, then store details in flight table
-            if 'error' not in pod_flights_details:
-                # if pod_flights_details['call_sign'] == fli.flight_callsign:
-                    if 'flight_itinerary' in pod_flights_details:
-                        fli.src = pod_flights_details['flight_itinerary']['flight_leg_1']['departure']['icao']
-                        fli.destination = pod_flights_details['flight_itinerary']['flight_leg_1']['arrival']['icao']
-                        fli.pod_response = pod_flights_details
-                        fli.save()
-                        final_flights.append(fli) # storing those flights which are being updated by pod flights data. Stored for sending public url
-
-        # sending flight public url to another api to view flight's route
-        for final_fli in final_flights:
-            public_url = str(adsb_public_url) + final_fli.flight_no
-            update_pod_flight = send_flights_public_url(update_flight_url, pod_access_token, previous_date, final_fli.flight_callsign, final_fli.aircraft.registration_number, public_url)
-            if 'error' not in update_pod_flight:
-                print("successfully updated",public_url)
-            else:
-                return False
-            
-
+    app.logger.info('Task finished')
     return True
 
 
@@ -179,8 +215,8 @@ def pod_task():
 celery_app.conf.beat_schedule = {
     'daily-task-scheduler': {
         'task': 'celery_config.pod_task',
-        # 'schedule': crontab(hour=0, minute=5),  # Schedule the task to run every day at 12:05 AM
-        'schedule': timedelta(seconds=10),  # Schedule the task to run every 30 seconds
+        'schedule': crontab(hour=0, minute=5),  # Schedule the task to run every day at 12:05 AM
+        # 'schedule': timedelta(seconds=10),  # Schedule the task to run every 30 seconds
     },
 }
 

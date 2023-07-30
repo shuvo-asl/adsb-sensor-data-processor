@@ -128,3 +128,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 /migrations/
+
+celerybeat-schedule.bak
+celerybeat-schedule.dat
+celerybeat-schedule.dir
