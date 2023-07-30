@@ -73,7 +73,7 @@ def get_flights_by_date(flight_url, pod_access_token, previous_date):
         'Authorization': f'Bearer {pod_access_token}',
     }
     try:
-        data={'date':previous_date}
+        data={"date":previous_date}
         response = requests.post(flight_url, data=data, headers=headers)
 
         if response.status_code == 200:
@@ -94,8 +94,7 @@ def get_flights_details_by_date_callsign_and_aircraft_no(flight_details_url, pod
         'Authorization': f'Bearer {pod_access_token}',
     }
     try:
-        data={'date':previous_date, call_sign: call_sign, aircraft_no:aircraft_no}
-        
+        data={"date":previous_date, "call_sign": call_sign, "aircraft_no":aircraft_no}
         response = requests.post(flight_details_url, data=data, headers=headers)
 
         if response.status_code == 200:
@@ -115,7 +114,7 @@ def send_flights_public_url(update_flight_url, pod_access_token, previous_date, 
         'Authorization': f'Bearer {pod_access_token}',
     }
     try:
-        data={'date':previous_date, call_sign: call_sign, aircraft_no:aircraft_no}
+        data={"date":previous_date, "call_sign": call_sign, "aircraft_no":aircraft_no}
         
         response = requests.post(update_flight_url, data=data, headers=headers)
 
