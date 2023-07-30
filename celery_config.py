@@ -149,7 +149,7 @@ def pod_task():
 
     my_flights = Flight.getCompletedFlightsByStatusAndDate('completed', previous_date)
 
-    previous_date = (today + timedelta(days=3)).strftime('%Y-%m-%d') # this is for testing, hide it in production
+    # previous_date = (today + timedelta(days=3)).strftime('%Y-%m-%d') # this is for testing, hide it in production
 
     # getting flight from pod of previous date
     try:
