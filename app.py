@@ -38,9 +38,12 @@ def handle_disconnect():
 @socketio.on('flight_status')
 def handle_flight_status(new_flight_status, filter_date = None):
     # with app.app_context():
+    client_sid = request.sid
+    room = f'flight_{filter_date}_{client_sid}'  # Create a unique room for each flight and client combination
+    join_room(room)  # Join the room associated with the flight and client
 
     data = FlightStatusHelper(new_flight_status, filter_date)
-    socketio.emit('data', data)
+    socketio.emit('data', data, room=room)
 
 @socketio.on('flight_no')
 def handle_flight_location(flight_no = None):

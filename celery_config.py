@@ -12,6 +12,8 @@ from config.env import getEnv
 import requests
 import logging
 from logging.handlers import RotatingFileHandler
+import os
+
 app = bootstrap.app
 
 # Celery configuration
@@ -35,18 +37,25 @@ def make_celery(app):
 celery_app = make_celery(app)
 
 # Configure logging
-log_file = 'celery.log'
+log_folder = 'logs'
+log_file = os.path.join(log_folder, f'pod_task_{datetime.now():%Y-%m-%d}.log')
 log_level = logging.DEBUG
 
-# Create a file handler to store logs in the specified file
-file_handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5)
-file_handler.setLevel(log_level)
-file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(file_formatter)
+# Create the log folder if it doesn't exist
+if not os.path.exists(log_folder):
+    os.makedirs(log_folder)
 
-# Add the file handler to the app's logger
-app.logger.addHandler(file_handler)
-app.logger.setLevel(log_level)
+# Use RotatingFileHandler for log rotation with negative backupCount
+handler = RotatingFileHandler(log_file, maxBytes=10 * 1024 * 1024, backupCount=-1)
+handler.setLevel(log_level)
+
+
+# Create a log format with a timestamp
+log_format = '%(asctime)s - %(levelname)s - %(message)s'
+formatter = logging.Formatter(log_format)
+handler.setFormatter(formatter)
+
+app.logger.addHandler(handler)
 
 def get_pod_access_token(api_url, pod_client_secret_key):
     headers = {
@@ -94,7 +103,8 @@ def get_flights_details_by_date_callsign_and_aircraft_no(flight_details_url, pod
         'Authorization': f'Bearer {pod_access_token}',
     }
     try:
-        data={"date":previous_date, "call_sign": call_sign, "aircraft_no":aircraft_no}
+        # data={"date":previous_date, "call_sign": call_sign, "aircraft_no":aircraft_no}
+        data={"date":previous_date, "call_sign": call_sign}
         response = requests.post(flight_details_url, data=data, headers=headers)
 
         if response.status_code == 200:
