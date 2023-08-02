@@ -1,8 +1,8 @@
 from db import db
-import datetime
 from sqlalchemy import desc
 from sqlalchemy import Column, DateTime
 from models.Aircraft import Aircraft
+from datetime import date, datetime, timedelta
 class Flight(db.Model):
     __tablename__ = 'flights'
     id = db.Column(db.Integer,primary_key=True)
@@ -13,7 +13,7 @@ class Flight(db.Model):
     destination = db.Column(db.String,nullable=True)
     status = db.Column(db.Enum('running', 'completed', 'pending',  name='flight_status_enum'), nullable=False, default='pending')
     flight_callsign = db.Column(db.String,nullable=True)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow())
+    created_at = Column(DateTime, default= datetime.utcnow())
     updated_at = Column(DateTime, nullable=True)
 
     # def __init__(self, aircraft_id, flight_no, src=None, destination=None, flight_callsign=None):
@@ -45,7 +45,21 @@ class Flight(db.Model):
         return cls.query.filter_by(flight_no=flight_no).first()
     @classmethod
     def getFlightByStatus(cls, status):
-        return cls.query.filter_by(status=status).all()
+        # flights = cls.query.filter_by(status=status).order_by(cls.updated_at.desc()).all()
+        flights = cls.query.filter_by(status=status).order_by(cls.id.desc()).all()
+        return flights
+
+    @classmethod
+    def getCompletedFlightsByStatusAndDate(cls, status, date):
+        flights = cls.query.filter_by(status=status).filter(db.func.date(cls.created_at) == date).order_by(cls.id.desc()).all()
+        return flights
+
+    @classmethod
+    def getRunningFlights(cls):
+        time_threshold = datetime.utcnow() - timedelta(seconds=30)
+
+        flights = cls.query.filter_by(status='running').filter(cls.updated_at >= time_threshold).order_by(cls.id.desc()).all()
+        return flights
 
     def save(self):
         db.session.add(self)
