@@ -9,7 +9,7 @@ from models.Flight import Flight
 from models.FlightPosition import FlightPosition
 from models.SensorData import SensorData
 from models.OrderNumber import Order
-from helpers.rq_helper import update_flight_status_for_bangladeshi_landings, update_bangladeshi_fir_flight_status, update_non_bangladeshi_fir_flight_status
+# from helpers.rq_helper import update_flight_status_for_bangladeshi_landings, update_bangladeshi_fir_flight_status, update_non_bangladeshi_fir_flight_status
 from celery_config import update_flight_status_for_bangladeshi_landings, update_bangladeshi_fir_flight_status, update_non_bangladeshi_fir_flight_status
 
 from rq import Queue

@@ -12,9 +12,12 @@ from flask_socketio import SocketIO, emit, join_room
 from flask import request
 import time
 import eventlet
-from helpers.SocketHelper import FlightPositionHelper, FlightStatusHelper, FlightsLiveLocation
+from helpers.SocketHelper import FlightPositionHelper, FlightStatusHelper, FlightsLiveLocation, StoreAndReturnFlightsLiveLocation
 
 from datetime import date, datetime, timedelta
+
+from apscheduler.schedulers.background import BackgroundScheduler
+import atexit
 
 eventlet.monkey_patch()
 
@@ -72,6 +75,12 @@ def handle_message(data):
     print('Received message:', data)
     emit('response', 'Server received message: ' + data)
 
+
+def running_flights():
+    with app.app_context():
+        data = StoreAndReturnFlightsLiveLocation()
+        socketio.emit('running_flights', data)
+
 # Add project routes
 api.add_resource(Welcome,'/')
 api.add_resource(Rnd,'/rnd')
@@ -81,5 +90,14 @@ api.add_resource(AirportView,'/airport','/airport/<iso_code>')
 api.add_resource(FlightView,'/flight','/flight/<flight_status>')
 
 if __name__ == '__main__':
+
+    # Initialize the scheduler
+    scheduler = BackgroundScheduler(daemon=True)
+    scheduler.add_job(running_flights, 'interval', seconds=1)
+    scheduler.start()
+
+    # Make sure to shut down the scheduler when the app exits
+    atexit.register(lambda: scheduler.shutdown())
+    
     socketio.run(app, host='0.0.0.0', port=getEnv('APP_PORT'), debug=True)
     # app.run()
