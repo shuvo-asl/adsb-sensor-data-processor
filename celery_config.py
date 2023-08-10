@@ -253,7 +253,7 @@ def update_flight_status_for_bangladeshi_landings(flightInfoFromSensor, flight_n
         print("Exception from update_flight_status_for_bangladeshi_landings", str(e))
         return False
 
-@celery_app.task
+
 def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no, order_number):
     try:
         aircraft_details = findOrCreateAircraft(flightInfoFromSensor)
