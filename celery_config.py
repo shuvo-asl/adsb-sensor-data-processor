@@ -22,6 +22,9 @@ app.config.update(
     result_backend='redis://localhost:6379/0'
 )
 
+stol_distance = 1  # STOL distance 1 km
+stol_speed = 50  # STOL speed 50 nautical miles
+
 def make_celery(app):
     celery = Celery(app.import_name, broker=app.config['broker_url'])
     celery.conf.update(app.config)
