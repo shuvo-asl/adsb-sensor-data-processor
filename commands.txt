@@ -1,0 +1,41 @@
+
+Manually:
+
+activate venv for all terminal
+
+terminal-1: python app.py
+
+terminal-2: celery -A celery_config.celery_app worker --loglevel=info
+
+terminal-3: celery -A celery_config.celery_app beat --loglevel=info
+
+
+make a bash file to active system by running one command.
+
+#!/bin/bash
+
+# Check if gnome-terminal is installed
+if ! command -v gnome-terminal &>/dev/null; then
+  echo "Error: gnome-terminal is not installed or not in the PATH."
+  exit 1
+fi
+
+# Replace 'path_to_directory' with the actual path to your directory
+directory="adsb-sensor-data-processor"
+
+# Replace 'venv_name' with the name of your virtual environment
+venv_name="venv"
+
+# Replace 'your_python_file1.py' with your actual Python file name.
+python_file1="app.py"
+
+# Corrected the python_file2 variable to only specify the Celery worker command without 'python3'.
+python_file2="celery -A celery_config.celery_app worker --loglevel=info -c 8"
+python_file3="celery -A celery_config.celery_app beat --loglevel=info"
+
+# Open a new terminal window, navigate to the directory, activate the virtual environment, and execute the first Python file
+gnome-terminal -- bash -c "cd $directory; source $venv_name/bin/activate; python3 $python_file1; exec bash"
+
+# Open another terminal window, navigate to the directory, activate the virtual environment, and execute the second Python file (Celery worker)
+gnome-terminal -- bash -c "cd $directory; source $venv_name/bin/activate; $python_file2; exec bash"
+gnome-terminal -- bash -c "cd $directory; source $venv_name/bin/activate; $python_file3; exec bash"

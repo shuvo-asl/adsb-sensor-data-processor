@@ -13,6 +13,7 @@ class FlightPosition(db.Model):
     speed = db.Column(db.Float(precision=2),nullable=True)
     angle = db.Column(db.Float(precision=2),nullable=True)
     altitude = db.Column(db.Float(precision=2),nullable=True)
+    order_number = db.Column(db.Integer, default='-1')
     response_text = db.Column(JSON,nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow())
     updated_at = Column(DateTime, nullable=True)
@@ -49,7 +50,7 @@ class FlightPosition(db.Model):
         if flight is None:
             return None
         flight = flight.json()
-        return db.session.query(cls).filter(cls.flight_id == flight['id']).all()
+        return db.session.query(cls).filter(cls.flight_id == flight['id']).order_by(cls.order_number).all()
     def save(self):
         db.session.add(self)
         db.session.commit()

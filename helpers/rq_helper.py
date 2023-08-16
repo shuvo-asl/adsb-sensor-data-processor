@@ -8,7 +8,7 @@ from datetime import datetime
 stol_distance = 1  # STOL distance 1 km
 stol_speed = 50  # STOL speed 50 nautical miles
 
-def update_flight_status_for_bangladeshi_landings(flightInfoFromSensor, flight_no):
+def update_flight_status_for_bangladeshi_landings(flightInfoFromSensor, flight_no, order_number):
     flight_status = "pending"
     try:
         fli_to_des_distance = flight_to_destination_distance(flightInfoFromSensor)
@@ -19,7 +19,7 @@ def update_flight_status_for_bangladeshi_landings(flightInfoFromSensor, flight_n
 
         print("Completed from update_flight_status_for_bangladeshi_landings")
         
-        flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no)
+        flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no, order_number)
 
         return True
 
@@ -28,7 +28,7 @@ def update_flight_status_for_bangladeshi_landings(flightInfoFromSensor, flight_n
         return False
 
 
-def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no):
+def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no, order_number):
     try:
         aircraft_details = findOrCreateAircraft(flightInfoFromSensor)
         flight = Flight.getFlightByFlightNo(flight_no)
@@ -48,6 +48,7 @@ def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no
 
         flight = flight.json()
 
+        print('queue order_number',order_number)
         flightPositionInstance = FlightPosition(**{
             "flight_id": flight['id'],
             "lat": flightInfoFromSensor['lat'],
@@ -55,6 +56,7 @@ def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no
             "altitude": flightInfoFromSensor['alt'],
             "speed": flightInfoFromSensor['spd'],
             "angle": flightInfoFromSensor['trk'],
+            "order_number": order_number,
             "response_text": flightInfoFromSensor,
         })
 
@@ -67,10 +69,10 @@ def flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no
         return False
 
 
-def update_bangladeshi_fir_flight_status(flightInfoFromSensor, flight_no):
+def update_bangladeshi_fir_flight_status(flightInfoFromSensor, flight_no, order_number):
     try:
         flight_status = "running"
-        flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no)
+        flight_and_its_position_store(flightInfoFromSensor, flight_status, flight_no, order_number)
 
         print("Completed from update_bangladeshi_fir_flight_status")
         return True
