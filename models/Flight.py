@@ -64,7 +64,7 @@ class Flight(db.Model):
         flights = cls.query.join(Aircraft).filter(
             and_(
                 cls.flight_callsign == flight_callsign,
-                Aircraft.registration_number == registration_number,
+                # Aircraft.registration_number == registration_number,
                 cls.status == 'completed',
                 db.func.date(cls.updated_at) == date,
             )

@@ -127,7 +127,8 @@ def send_flights_public_url(update_flight_url, pod_access_token, previous_date, 
         'Authorization': f'Bearer {pod_access_token}',
     }
     try:
-        data={"date":previous_date, "call_sign": call_sign, "aircraft_no":aircraft_no}
+        # data={"date":previous_date, "call_sign": call_sign, "aircraft_no":aircraft_no, "link": public_url}
+        data={"date":previous_date, "call_sign": call_sign, "link": public_url}
         
         response = requests.post(update_flight_url, data=data, headers=headers)
 
@@ -145,7 +146,6 @@ def send_flights_public_url(update_flight_url, pod_access_token, previous_date, 
 
 @celery_app.task
 def pod_task():
-    app.logger.info('Task started')
     pod_client_secret_key = getEnv('POD_CLIENT_SECRET_KEY')
 
     api_url = getEnv('POD_ACCESS_TOKEN_API')
@@ -159,6 +159,7 @@ def pod_task():
 
     today = datetime.today()
     previous_date = (today - timedelta(days=1)).strftime('%Y-%m-%d')
+    app.logger.info(f"Task Started For {previous_date}")
 
     my_flights = Flight.getCompletedFlightsByStatusAndDate('completed', previous_date)
 
@@ -166,8 +167,12 @@ def pod_task():
 
     # getting flight from pod of previous date
     try:
-        pod_flights = get_flights_by_date(flight_url, pod_access_token, previous_date) 
-        app.logger.info(f'Found flights from pod successfully')
+        pod_flights = get_flights_by_date(flight_url, pod_access_token, previous_date)
+        if len(pod_flights)>0:
+            app.logger.info(f'Found flights from pod successfully')
+        else:
+            app.logger.info(f'Flights not found')
+
     except Exception as e:
         app.logger.error(f'Exception in getting flights from pod')
         return False
@@ -205,17 +210,24 @@ def pod_task():
                             final_flights.append(fli) # storing those flights which are being updated by pod flights data. Stored for sending public url
 
             # sending flight public url to another api to view flight's route
+
+            if len(final_flights)>0:
+                app.logger.info(f"Total {len(final_flights)} common flights found")
+            else:
+                app.logger.info(f'Common Flights not found')
+
             for final_fli in final_flights:
                 public_url = str(adsb_public_url) + final_fli.flight_no
                 try:
                     update_pod_flight = send_flights_public_url(update_flight_url, pod_access_token, previous_date, final_fli.flight_callsign, final_fli.aircraft.registration_number, public_url)
-                    app.logger.info(f"Pod Flight updated with public Url, callsign: {final_fli.flight_callsign}")
                 except Exception as e:
                     app.logger.error(f"Exception in updating flight's public url in pod, callsign: {final_fli.flight_callsign}")
 
                 if 'error' in update_pod_flight:
                     app.logger.error(f"{update_pod_flight['error']}. Error from updating public url id pod, callsign: {final_fli.flight_callsign}")
-            
+                else:
+                    app.logger.info(f"Pod Flight updated with public Url, callsign: {final_fli.flight_callsign}")
+
         else:
             app.logger.info(f'Flights not found on the previous day.')
 
