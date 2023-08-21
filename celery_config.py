@@ -16,10 +16,13 @@ import os
 
 app = bootstrap.app
 
+redis_host = getEnv("REDIS_HOST")
+redis_port = getEnv("REDIS_PORT")
+
 # Celery configuration
 app.config.update(
-    broker_url='redis://localhost:6379/0',
-    result_backend='redis://localhost:6379/0'
+    broker_url='redis://{}:{}/0'.format(redis_host,redis_port),
+    result_backend='redis://{}:{}/0'.format(redis_host,redis_port)
 )
 
 stol_distance = 1  # STOL distance 1 km
