@@ -1,5 +1,6 @@
-# Use and official python runtime as the base image
-FROM python:3.8
+# Use the official Python runtime as the base image
+FROM python:3.9
+
 # Set the authors label
 LABEL authors="Shuvo"
 
