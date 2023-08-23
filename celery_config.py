@@ -192,25 +192,30 @@ def pod_task():
                     common_flights.append(res)
         
             final_flights = []
+            final_flights_callsign_tg = {}
             for fli in common_flights:
                 
                 # getting flights details from pod
                 try:
                     pod_flights_details = get_flights_details_by_date_callsign_and_aircraft_no(flight_details_url, pod_access_token, previous_date, fli.flight_callsign, fli.aircraft.registration_number)
-                    app.logger.info(f"Found flight's details from pod, callsign: {fli.flight_callsign}")
                 except Exception as e:
                     app.logger.error(f'Exception in getting flights details from pod')
 
                 # if flight details from pod is matched with my requesting flight without error, then store details in flight table
                 if pod_flights_details and ('error' not in pod_flights_details):
+                    pod_flights_details_tg = pod_flights_details['tg']
+                    app.logger.info(f"Found flight's details from pod, callsign: {fli.flight_callsign}, tg: {pod_flights_details_tg}")
+
                     if pod_flights_details['call_sign'] == fli.flight_callsign:    # commented for debug mode, implemented for live mode.
                         if 'flight_itinerary' in pod_flights_details:
                             fli.src = pod_flights_details['flight_itinerary']['flight_leg_1']['departure']['icao']
                             fli.destination = pod_flights_details['flight_itinerary']['flight_leg_1']['arrival']['icao']
                             fli.pod_response = pod_flights_details
                             fli.save()
-                            app.logger.info(f"Adsb Flight updated with pod flight details, callsign: {fli.flight_callsign}")
+                            app.logger.info(f"Adsb Flight updated with pod flight details, callsign: {fli.flight_callsign}, tg: {pod_flights_details_tg}")
                             final_flights.append(fli) # storing those flights which are being updated by pod flights data. Stored for sending public url
+
+                            final_flights_callsign_tg[str(fli.flight_callsign)] = pod_flights_details_tg # storing those flight's callsign and tg number for logging
 
             # sending flight public url to another api to view flight's route
 
@@ -224,12 +229,12 @@ def pod_task():
                 try:
                     update_pod_flight = send_flights_public_url(update_flight_url, pod_access_token, previous_date, final_fli.flight_callsign, final_fli.aircraft.registration_number, public_url)
                 except Exception as e:
-                    app.logger.error(f"Exception in updating flight's public url in pod, callsign: {final_fli.flight_callsign}")
+                    app.logger.error(f"Exception in updating flight's public url in pod, callsign: {final_fli.flight_callsign}, tg: {final_flights_callsign_tg[str(final_fli.flight_callsign)]}")
 
                 if 'error' in update_pod_flight:
-                    app.logger.error(f"{update_pod_flight['error']}. Error from updating public url id pod, callsign: {final_fli.flight_callsign}")
+                    app.logger.error(f"{update_pod_flight['error']}. Error from updating public url id pod, callsign: {final_fli.flight_callsign}, tg: {final_flights_callsign_tg[str(final_fli.flight_callsign)]}")
                 else:
-                    app.logger.info(f"Pod Flight updated with public Url, callsign: {final_fli.flight_callsign}")
+                    app.logger.info(f"Pod Flight updated with public Url, callsign: {final_fli.flight_callsign}, tg: {final_flights_callsign_tg[str(final_fli.flight_callsign)]}")
 
         else:
             app.logger.info(f'Flights not found on the previous day.')
