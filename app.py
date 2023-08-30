@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     # Initialize the scheduler
     scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(running_flights, 'interval', seconds=1)
+    scheduler.add_job(running_flights, 'interval', seconds=2)
     scheduler.start()
 
     # Make sure to shut down the scheduler when the app exits
