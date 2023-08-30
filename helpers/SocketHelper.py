@@ -13,6 +13,9 @@ from celery_config import update_flight_status_for_bangladeshi_landings, update_
 
 from shapely.geometry import Point
 
+PRIORITY_HIGH = 0
+PRIORITY_NORMAL = 5
+PRIORITY_LOW = 10
 
 def FlightStatusHelper(new_flight_status, filter_date = None):
     flights = []
@@ -181,26 +184,21 @@ def StoreAndReturnFlightsLiveLocation():
                 order.save()
 
                 flight_no = generateFlightNo(flightInfoFromSensor)
-                
-                # Check if Fli_dst airport is bangladeshi airport
+
                 if flightInfoFromSensor['dst'] is not None and (flightInfoFromSensor['dst'] in bd_airports_icao):
-                    update_flight_status_for_bangladeshi_landings.delay(flightInfoFromSensor,flight_no, order_number)  
-                    
+                    update_flight_status_for_bangladeshi_landings.apply_async(args=[flightInfoFromSensor, flight_no, order_number], priority=PRIORITY_NORMAL)
                     item['flight_no'] = flight_no
                     hex_set.add(hex_value)
                     unique_data.append(item)
                 else:
-
                     is_in_bangladeshi_area = is_points_in_bangladesh(Point(flightInfoFromSensor['lon'],flightInfoFromSensor['lat']))
 
                     if is_in_bangladeshi_area:
-
-                        update_bangladeshi_fir_flight_status.delay(flightInfoFromSensor, flight_no, order_number)
-
+                        update_bangladeshi_fir_flight_status.apply_async(args=[flightInfoFromSensor, flight_no, order_number], priority=PRIORITY_HIGH)
                         item['flight_no'] = flight_no
                         hex_set.add(hex_value)
                         unique_data.append(item)
                     else:
-                        update_non_bangladeshi_fir_flight_status.delay(flight_no) 
+                        update_non_bangladeshi_fir_flight_status.apply_async(args=[flight_no], priority=PRIORITY_LOW)
 
     return unique_data
